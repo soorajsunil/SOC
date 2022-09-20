@@ -1,98 +1,116 @@
 classdef current_simulator
-    % simulates current signal for charging and discharging batteries
-    % assumes positive current for charging and negative for discharging
-
+    % simulates battery current profiles
+    % >> assumes positive current for charging and negative for discharging
     properties
-        sampling_period(1,1)       % in secs
-        signal_duration(1,1)       % in secs
-        frequency(1,1)             % in hertz
-        phase(1,1)                 % in radians
-        amplitude(1,1)             % in Ampheres
-        charge_pattern
+        current                % discrete-time current samples
+        time                   % discrete-time in secs
+        sampling_period(1,1)   % in secs
+        duration(1,1)          % signal duration in secs
+        sample_length          % sample length
+        profile                % options: {options: 'pulse', 'random'}
+
+        %  sinusoid signal properties for pulse control:
+        frequency  % in hertz
+        phase      % in radians
+        amplitude  % in Ampheres
     end
 
-    properties(Dependent)
-        current              % discrete-time current samples
-        time                 % discrete-time in secs
-        sample_length
-    end
-
-    properties(Dependent, Hidden)
-        sampling_rate
+    properties(Hidden)
+        Fs   % sampling rate in hertz
+        Tend
     end
 
     methods
         function obj = current_simulator(varargin)
-            % default values
-            sampling_period = 0.1;    % in secs
-            signal_duration = 10*60;    % in secs
-            frequency       = 0.01;   % in hertz
-            phase           = 0;      % in radians
-            amplitude       = 1;      % in Ampheres
-            charge_pattern  = 'constant';
-            expectedPatterns = {'constant', 'pulse', 'alternate pulse'};
 
+            % default values for properties:
+            sampling_period = 0.1;     % in secs
+            duration        = 120;     % in secs
+            profile         = 'pulse';
+            expectedProfiles= {'pulse', 'random'};
+            frequency       = 1;       % in hertz
+            phase           = 0;       % in radians
+            amplitude       = 1;       % in Ampheres
+
+            % parser code to pick default values:
             p        = inputParser;
             validate = @(x) isnumeric(x) && isscalar(x);
-
             addOptional(p,'sampling_period', sampling_period, validate);
-            addOptional(p,'signal_duration', signal_duration, validate);
+            addOptional(p,'duration', duration, validate);
             addOptional(p,'frequency',frequency, validate);
-            addOptional(p,'phase',phase, validate);
-            addOptional(p,'amplitude', amplitude, validate);
-            addOptional(p, 'charge_pattern', charge_pattern, @(x) any(validatestring(x,expectedPatterns)));
-
+            addOptional(p,'phase',phase, validate)
+            addOptional(p,'amplitude', amplitude, @(x) isnumeric(x));
+            addOptional(p, 'profile', profile, ...
+                @(x) any(validatestring(x,expectedProfiles)));
             parse(p,varargin{:});
+            obj.sampling_period = p.Results.sampling_period;
+            obj.duration        = p.Results.duration;
+            obj.profile         = p.Results.profile;
+            obj.frequency       = p.Results.frequency;
+            obj.phase           = p.Results.phase;
+            obj.amplitude       = p.Results.amplitude;
 
-            obj.sampling_period =p.Results.sampling_period;
-            obj.signal_duration =p.Results.signal_duration;
-            obj.frequency =p.Results.frequency;
-            obj.phase =p.Results.phase;
-            obj.amplitude =p.Results.amplitude;
-            obj.charge_pattern = p.Results.charge_pattern;
+            obj    = sampling(obj);            % sampling
+            obj    = simulate_profile(obj);    % simulate
         end
 
-        function sample_length = get.sample_length(obj)
-            sample_length = obj.signal_duration*obj.sampling_rate;
+        function obj = sampling(obj)
+            obj.Fs   = 1/obj.sampling_period; % sampling frequency (F=1/Ts)
+            obj.Tend = obj.Fs*obj.duration;
+            obj.time = (0:obj.Tend-1)*obj.sampling_period ;
+            obj.sample_length = length(obj.time);
         end
 
-        function sampling_rate = get.sampling_rate(obj)
-            sampling_rate = 1/obj.sampling_period;
-        end
-
-        function time = get.time(obj)
-            time = (0:obj.sample_length-1)*obj.sampling_period;
-        end
-
-        function samples = get.current(obj)
-            switch upper(obj.charge_pattern)
-                case  'CONSTANT'
-                    samples = obj.amplitude*ones(1,obj.sample_length);
+        function obj = simulate_profile(obj)
+            switch upper(obj.profile)
                 case 'PULSE'
-                    samples = obj.amplitude*sign(sin(2*pi*obj.frequency*obj.time + obj.phase));
-                    if obj.amplitude > 0
-                        samples(samples<0)=0;
-                    else
-                        samples(samples>0) = 0;
+                    switch length(obj.amplitude)
+                        case 1
+                            obj.current = obj.amplitude*sign( ...
+                                cos(2*pi*obj.frequency*obj.time + obj.phase));
+                            if obj.amplitude > 0
+                                obj.current(obj.current<0) = 0;
+                            elseif obj.amplitude < 0
+                                obj.current(obj.current>0) = 0;
+                            end
+                        case 2
+                            obj.current = sign( ...
+                                sin(2*pi*obj.frequency*obj.time + obj.phase));
+                            obj.current(obj.current==1) = obj.amplitude(1);
+                            obj.current(obj.current==-1) = obj.amplitude(2);
+                        otherwise
+                            error('Incorrect amplitude dimensions for generating pulse signal')
                     end
-                case 'ALTERNATE PULSE'
-                    samples = obj.amplitude*sign(cos(2*pi*obj.frequency*obj.time + obj.phase));
-                    % >> add more cases:
-                    % random discharge profile - hint: used stairs function
-
-                    % standard current profiles
+                case 'RANDOM'
+                    obj.current = zeros(size(obj.time));
+                    n = 0;
+                    amp_range  = [-3,5]; 
+                    freq_range = [0,1]; 
+                    for i = 1:floor(obj.Tend/obj.Fs)
+                        t_i = obj.time((n*obj.Fs+1):((n+1)*obj.Fs));
+                        f_i = obj.frequency*randi(freq_range);
+                        a_i = obj.amplitude*randi(amp_range);
+                        obj.current((n*obj.Fs+1):((n+1)*obj.Fs)) = ...
+                            a_i*sign(cos(2*pi*f_i*t_i + obj.phase));
+                        n = n + 1;
+                    end
             end
         end
 
-        function plot(obj)
-            figure(Name='Current')
-            plot(obj.time, obj.current, 'b-', LineWidth=2)
-            grid on; box on
-            xlabel('Time (s)')
-            ylabel('Current (A)')
-            axis('padded')
-        end
+        
+% PENDING...        
+%         function [re_current, re_time]  = resample(obj, resampling_period)
+% 
+%             assert(resampling_period >= obj.sampling_period, ...
+%                 'resampling_period should be less than or equal to sampling_period')
+% 
+%             re_current = obj.current;
+%             re_time    = obj.time;
+% 
+%         end
     end
+
+
 
 end
 
