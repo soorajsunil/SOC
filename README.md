@@ -1,12 +1,10 @@
-# battery-simulator
-
+# battery-state-of-charge
 
 ```
-DEMO.m
+battery_simulator.m
 ```
 <p align="center">
-<img src="figures/current.bmp" width="400" height="300"> 
-<img src="figures/soc.bmp" width="400" height="300"> 
+<img src="_git/soc_demo.bmp" width="400" height="500"> 
 </p>
 
 **References:**  
