@@ -12,26 +12,26 @@ ECM = equivalent_circuit_model(Battery.scaled_soc, Battery.scaling_factor);
 ECM = ECM.internal_resistance(I.current, 0.14); 
 
 %% Plot
-Ploty = my_plot();
-figure(Units=Ploty.Units, Position=Ploty.Position + [0 0 -2 8]); 
+PLOTTY = my_plot();
+figure(Units=PLOTTY.Units, Position=PLOTTY.Position + [0 0 -2 8]); 
 tiledlayout(3,1)
 nexttile
 hold on; box on;grid on;
-plot(I.time/(60*60), I.current, LineWidth=Ploty.LineWidth)
+plot(I.time/(60*60), I.current, LineWidth=PLOTTY.LineWidth)
 ylabel('Current (A)')
 xlabel('Time (h)')
 axis('padded')
-set(gca, Fontsize=Ploty.FontSize, FontName=Ploty.FontName)
+set(gca, Fontsize=PLOTTY.FontSize, FontName=PLOTTY.FontName)
 nexttile
 hold on; box on;grid on;
-plot(I.time/(60*60), Battery.soc,LineWidth=Ploty.LineWidth)
+plot(I.time/(60*60), Battery.soc,LineWidth=PLOTTY.LineWidth)
 ylabel('SOC')
 xlabel('Time (h)')
-set(gca, Fontsize=Ploty.FontSize, FontName=Ploty.FontName)
+set(gca, Fontsize=PLOTTY.FontSize, FontName=PLOTTY.FontName)
 nexttile
 hold on; box on;grid on;
-plot(ECM.soc, ECM.open_circuit_voltage, LineWidth=Ploty.LineWidth)
+plot(ECM.soc, ECM.open_circuit_voltage, LineWidth=PLOTTY.LineWidth)
 ylabel('OCV (V)')
 xlabel('SOC')
 axis('padded')
-set(gca, Fontsize=Ploty.FontSize, FontName=Ploty.FontName)
+set(gca, Fontsize=PLOTTY.FontSize, FontName=PLOTTY.FontName)
