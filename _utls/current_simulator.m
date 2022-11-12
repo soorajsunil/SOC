@@ -79,12 +79,13 @@ classdef current_simulator
                             obj.current(obj.current==1) = obj.amplitude(1);
                             obj.current(obj.current==-1) = obj.amplitude(2);
                         otherwise
-                            error('Incorrect amplitude dimensions for generating pulse signal')
+                            error('lazy coding!')
                     end
                 case 'RANDOM'
+                    % check:: has some issue for lower sampling period 
                     obj.current = zeros(size(obj.time));
                     n = 0;
-                    amp_range  = [-3,5]; 
+                    amp_range  = [-1,1]; 
                     freq_range = [0,1]; 
                     for i = 1:floor(obj.Tend/obj.Fs)
                         t_i = obj.time((n*obj.Fs+1):((n+1)*obj.Fs));
@@ -96,21 +97,6 @@ classdef current_simulator
                     end
             end
         end
-
-        
-% PENDING...        
-%         function [re_current, re_time]  = resample(obj, resampling_period)
-% 
-%             assert(resampling_period >= obj.sampling_period, ...
-%                 'resampling_period should be less than or equal to sampling_period')
-% 
-%             re_current = obj.current;
-%             re_time    = obj.time;
-% 
-%         end
     end
-
-
-
 end
 
