@@ -4,7 +4,7 @@
 battery_simulator.m
 ```
 <p align="center">
-<img src="_git/soc_demo.bmp" width="400" height="500"> 
+<img src="_git/soc_demo.bmp" width="600" height="700"> 
 </p>
 
 **References:**  
