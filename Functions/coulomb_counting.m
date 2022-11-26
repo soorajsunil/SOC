@@ -20,7 +20,7 @@ classdef coulomb_counting
         function obj = coulomb_counting(ik, tk, varargin)
             % default values
             intial_soc     = 0.5;
-            capacity       = 1.9*3600; % cell capacity
+            capacity       = 3*3600; % cell capacity in As
             scaling_factor = 0.175;
             p = inputParser;
             validate = @(x) isnumeric(x) && isscalar(x);
@@ -37,8 +37,8 @@ classdef coulomb_counting
         end
 
         function efficiency = get.efficiency(obj)
-            efficiency = obj.coulomb_counting_efficiency ...
-                (obj.ik, obj.charge_efficiency, obj.discharge_efficiency);
+            efficiency = obj.cc_efficiency(obj.ik, ...
+                obj.charge_efficiency, obj.discharge_efficiency);
         end
 
         function soc = get.soc(obj)
@@ -64,16 +64,17 @@ classdef coulomb_counting
                 variance(k) = k*(obj.efficiency(k)^2)*(dt^2) ...
                     *(current_noise^2)/(obj.capacity^2);
             end
+
         end
     end
 
     methods(Static)
+
         function zk_i = add_noise(current, current_noise)
             zk_i = current + current_noise*randn(size(current));
         end
 
-        function eta = coulomb_counting_efficiency(current, charge_eff, ...
-                discharge_eff)
+        function eta = cc_efficiency(current, charge_eff, discharge_eff)
             eta = ones(size(current));
             eta(current>0) = charge_eff;
             eta(current<0) = discharge_eff;

@@ -25,7 +25,7 @@ classdef current_simulator
 
             % default values for properties:
             sampling_period = 0.1;     % in secs
-            duration        = 120;     % in secs
+            duration        = 600;     % in secs
             profile         = 'pulse';
             expectedProfiles= {'pulse', 'random'};
             frequency       = 1;       % in hertz
@@ -50,8 +50,8 @@ classdef current_simulator
             obj.phase           = p.Results.phase;
             obj.amplitude       = p.Results.amplitude;
 
-            obj    = sampling(obj);            % sampling
-            obj    = simulate_profile(obj);    % simulate
+            obj = sampling(obj);            % sampling
+            obj = simulate_profile(obj);    % simulate
         end
 
         function obj = sampling(obj)
@@ -67,7 +67,7 @@ classdef current_simulator
                     switch length(obj.amplitude)
                         case 1
                             obj.current = obj.amplitude*sign( ...
-                                cos(2*pi*obj.frequency*obj.time + obj.phase));
+                                sin(2*pi*obj.frequency*obj.time + obj.phase));
                             if obj.amplitude > 0
                                 obj.current(obj.current<0) = 0;
                             elseif obj.amplitude < 0
@@ -79,7 +79,7 @@ classdef current_simulator
                             obj.current(obj.current==1) = obj.amplitude(1);
                             obj.current(obj.current==-1) = obj.amplitude(2);
                         otherwise
-                            error('lazy coding!')
+                            error('check amplitude dimensions!')
                     end
                 case 'RANDOM'
                     % check:: has some issue for lower sampling period 

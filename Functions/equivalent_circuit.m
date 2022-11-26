@@ -1,10 +1,10 @@
-classdef equivalent_circuit_model
+classdef equivalent_circuit
 
     properties
         open_circuit_voltage
         terminal_voltage
         drop
-        model 
+        model
         soc
         scaled_soc
         R0
@@ -27,7 +27,7 @@ classdef equivalent_circuit_model
     end
 
     methods
-        function obj = equivalent_circuit_model(current_soc, scaling_factor)
+        function obj = equivalent_circuit(current_soc, scaling_factor)
             obj.current_soc     = current_soc;
             obj.scaling_factor = scaling_factor;
             obj.open_circuit_voltage   = obj.get_ocv(obj.ocv_params, obj.current_soc);
@@ -35,34 +35,19 @@ classdef equivalent_circuit_model
 
         function obj = internal_resistance(obj, ik, R0)
             % simple (internal resistance) model
-            obj.model = 'R-internal'; 
+            obj.model    = 'internal_resistance';
             obj.R0       = R0;
             obj.drop     = ik*obj.R0;
             obj.terminal_voltage = obj.open_circuit_voltage + obj.drop;
-            obj.scaled_soc = obj.SOC_lookup(obj.resolution, ...
+            obj.scaled_soc = obj.soc_lookup(obj.resolution, ...
                 obj.scaling_factor, obj.ocv_params, obj.open_circuit_voltage); % OCV-SOC table
             obj.soc = soc_scaling(obj.scaled_soc, obj.scaling_factor, 'backward');
-        end
-
-        function variance = theoretical_variance(obj, current_noise, voltage_noise)
-            variance = zeros(size(obj.scaled_soc));
-            
-            diff_eq = @(x, ocv_params) ...
-                -ocv_params(2)*(x^(-2)) - 2*ocv_params(3)*(x^(-3)) - ...
-                3*ocv_params(4)*(x^(-4)) - 4*ocv_params(5)*(x^(-5)) +  ...
-                ocv_params(6) + ocv_params(7)/x - ...
-                ocv_params(8)/(1-x); % first order of combined +3 model 
-
-            for k = 1:length(obj.scaled_soc)
-                variance(k) = (voltage_noise^2+obj.R0^2*current_noise^2) ...
-                    *(1/diff_eq(obj.scaled_soc(k), obj.ocv_params))^2;
-            end
         end
 
     end
 
     methods(Static)
-        function SOC = SOC_lookup(resolution, scaling_factor, ocv_params, ocv)
+        function SOC = soc_lookup(resolution, scaling_factor, ocv_params, ocv)
             SOC = nan(size(ocv));
             min_soc = soc_scaling(0,scaling_factor,'forward');
             max_soc = soc_scaling(1,scaling_factor,'forward');
@@ -75,8 +60,8 @@ classdef equivalent_circuit_model
                 xr = double((min_soc + max_soc)/2);
                 i  = 0;
                 while(ea > resolution)
-                    fxl = equivalent_circuit_model.get_ocv(ocv_params, min_soc) - ocv;
-                    fxr = equivalent_circuit_model.get_ocv(ocv_params, xr) - ocv;
+                    fxl = equivalent_circuit.get_ocv(ocv_params, min_soc) - ocv;
+                    fxr = equivalent_circuit.get_ocv(ocv_params, xr) - ocv;
                     if(fxl*fxr<=0)
                         max_soc = xr;
                     elseif(fxl*fxr>0)
@@ -91,22 +76,36 @@ classdef equivalent_circuit_model
                 SOC  = xr_new;
             end
         end
-        function ocv = get_ocv(ocv_params, SOC)
+        function ocv = get_ocv(ocv_params, soc)
             % OCV characterization using "combined +3" model
             % [1]. Pattipati, B., Balasingam, B., Avvari, G. V., Pattipati,
             % K. R., & Bar-Shalom, Y. (2014). Open circuit voltage
             % characterization of lithium-ion batteries. Journal of
             % Power Sources, 269, 317-333.
-            ocv = ocv_params(1) + ocv_params(2).*(1./SOC) ...
-                + ocv_params(3).*(1./(SOC.^2)) ...
-                + ocv_params(4).*(1./(SOC.^3)) ...
-                + ocv_params(5).*(1./(SOC.^4)) ...
-                + ocv_params(6).*SOC + ocv_params(7).*(log(SOC)) ...
-                + ocv_params(8).*(log(1-SOC));
+            ocv = ocv_params(1) + ocv_params(2).*(1./soc) ...
+                + ocv_params(3).*(1./(soc.^2)) ...
+                + ocv_params(4).*(1./(soc.^3)) ...
+                + ocv_params(5).*(1./(soc.^4)) ...
+                + ocv_params(6).*soc + ocv_params(7).*(log(soc)) ...
+                + ocv_params(8).*(log(1-soc));
         end
 
         function zk_v = add_noise(voltage, voltage_noise)
             zk_v = voltage + voltage_noise*randn(size(voltage));
+        end
+
+        function var = theoretical_variance(scaled_soc, R0, ocv_params, ...
+                current_noise, voltage_noise)
+            var = zeros(size(scaled_soc));
+            diff_eq = @(x, ocv_params) ...
+                -ocv_params(2)*(x^(-2)) - 2*ocv_params(3)*(x^(-3)) - ...
+                3*ocv_params(4)*(x^(-4)) - 4*ocv_params(5)*(x^(-5)) +  ...
+                ocv_params(6) + ocv_params(7)/x - ...
+                ocv_params(8)/(1-x); % first order of combined +3 model
+            for k = 1:numel(scaled_soc)
+                var(k) = (voltage_noise^2+R0^2*current_noise^2) ...
+                    *(1/diff_eq(scaled_soc(k), ocv_params))^2;
+            end
         end
     end
 end
