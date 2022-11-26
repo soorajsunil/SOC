@@ -1,11 +1,27 @@
-# battery-state-of-charge
+# Battery state-of-charge (SOC) estimation using the extended Kalman filter (EKF).
 
+Simulate battery,
 ```
-battery_simulator.m
+BatteryDEMO.m
 ```
-<p align="center">
-<img src="_git/soc_demo.bmp" width="600" height="700"> 
-</p>
+![Batery demo](Figures/soc_demo.png)
 
-**References:**  
-[1]. Ahmed, Mostafa Shaban, Sheikh Arif Raihan, and Balakumar Balasingam. "A scaling approach for improved state of charge representation in rechargeable batteries." Applied energy 267 (2020): 114880.
+Coulomb counting for SOC estimation, 
+```
+CoulombCountingDEMO.m
+```
+Open-circuit voltage lookup for SOC estimation, 
+```
+OpenCircuitLookupDEMO.m
+```
+Extended Kalman filter for SOC estimation, 
+```
+ExtendedKalmanFilterDEMO.m
+```
+![Coulomb demo](Figures/ekf_demo.png)
+
+For more details or if you use the code for any academic work, please cite the original paper.
+
+```bibtex
+coming soon ....
+```
