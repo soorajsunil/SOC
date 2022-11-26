@@ -11,9 +11,9 @@ OpenCircuitLookupDEMO.m
 ```
 ![OCV demo](../Figures/ocv_lookup_demo.png)
 
-Extended Kalman filter for SOC estimation
+## Extended Kalman filter for SOC estimation
 ```
-## ExtendedKalmanFilterDEMO.m
+ExtendedKalmanFilterDEMO.m
 ```
 ![EKF demo](../Figures/ekf_demo.png)
 
