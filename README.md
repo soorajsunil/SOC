@@ -1,27 +1,17 @@
-# Battery state-of-charge (SOC) estimation using the extended Kalman filter (EKF).
+# Battery state-of-charge (SOC) estimation
 
-Simulate battery,
-```
+### Table of Contents
+0. [Battery simulation](#Battery-simulation)
+1. [SOC estimation using coulomb counting](#SOC-estimation-using-coulomb-counting)
+2. [SOC estimation using open-circuit voltage (OCV) lookup ](#Dependencies)
+3. [SOC estimation using the extended Kalman filter (EKF)](#Build)
+4. [Comparision of coulomb counting, OCV, and EKF](#How-to-run)
+5. [More Related Work](#More-Related-Work)
+6. [Frequently Asked Questions](#Frequently-Asked-Questions)
+7. [License](#License)
+
+Battery simulation
+``` 
 BatteryDEMO.m
 ```
 ![Batery demo](Figures/soc_demo.png)
-
-Coulomb counting for SOC estimation, 
-```
-CoulombCountingDEMO.m
-```
-Open-circuit voltage lookup for SOC estimation, 
-```
-OpenCircuitLookupDEMO.m
-```
-Extended Kalman filter for SOC estimation, 
-```
-ExtendedKalmanFilterDEMO.m
-```
-![Coulomb demo](Figures/ekf_demo.png)
-
-For more details or if you use the code for any academic work, please cite the original paper.
-
-```bibtex
-coming soon ....
-```
